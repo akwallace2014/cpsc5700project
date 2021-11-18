@@ -12,10 +12,11 @@ Alisa Wallace, CPSC 5700 FQ21
 #include "Mesh.h"
 #include "Camera.h"
 #include "SceneObject.h"
+#include "Shader.h"
 
 // GPU identifiers
-GLuint program1 = 0;
-GLuint program2 = 0;
+//GLuint program1 = 0;
+//GLuint program2 = 0;
 
 time_t startTime = clock();
 vector<float> movement = { 0.0, 0.0 };
@@ -27,6 +28,8 @@ Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
 SceneObject fairyMesh("Fairy", "./Healing_Fairy.obj");
+Shader fairyStandard("./FairyVertexShader.glsl", "./FairyFragmentShader.glsl");
+Shader fairyLightSource("./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
 
 void adjustMovement(int ID) {
     // which direction are we moving in?
@@ -60,36 +63,33 @@ void Display() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // access GPU vertex buffer
-
-
+    
     // associate position input to shader with position array in vertex buffer
-    VertexAttribPointer(program1, "point", 3, 0, (void*)0);
-    VertexAttribPointer(program1, "normal", 3, 0, (void*)(fairyMesh.pointsSize() * sizeof(vec3)));
+    VertexAttribPointer(fairyStandard.getID(), "point", 3, 0, (void*)0);
+    VertexAttribPointer(fairyStandard.getID(), "normal", 3, 0, (void*)(fairyMesh.pointsSize() * sizeof(vec3)));
     // get matrices based on changes resulting from callback functions/mouse input, send to shader
     for (int i = 0; i < 2; i++) {
             if (i == 0) {
-                glUseProgram(program2);
+                glUseProgram(fairyLightSource.getID());
                 adjustMovement(i);
                 mat4 translation = Translate(movement[i], movement[i], 0);
                 mat4 scale = Scale(0.25, 0.25, 0.25);
                 mat4 rotation = RotateY(30.0f);
-                SetUniform(program2, "modelview", translation * camera.modelview * rotation * scale);
-                SetUniform(program2, "persp", camera.persp);
-                
+                SetUniform(fairyLightSource.getID(), "modelview", translation * camera.modelview * rotation * scale);
+                SetUniform(fairyLightSource.getID(), "persp", camera.persp);
 
                 // render triangles
                 glDrawElements(GL_TRIANGLES, 3 * fairyMesh.trianglesSize(), GL_UNSIGNED_INT, fairyMesh.trianglesStart());
                 glFlush();
             }
             else {
-                glUseProgram(program1);
+                glUseProgram(fairyStandard.getID());
                 mat4 scale = Scale(0.25, 0.25, 0.25);
                 mat4 rotation = RotateY(30.0f);
-                SetUniform(program1, "modelview", camera.modelview * rotation * scale);
-                SetUniform(program1, "persp", camera.persp);
-                SetUniform(program1, "lightPosition", vec3(movement[0], movement[0], -5.00f));
-                SetUniform(program1, "viewPosition", camera.GetTran());
+                SetUniform(fairyStandard.getID(), "modelview", camera.modelview * rotation * scale);
+                SetUniform(fairyStandard.getID(), "persp", camera.persp);
+                SetUniform(fairyStandard.getID(), "lightPosition", vec3(movement[0], movement[0], -5.00f));
+                SetUniform(fairyStandard.getID(), "viewPosition", camera.GetTran());
 
                 // render triangles
                 //glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, &triangles[0]);
@@ -112,17 +112,17 @@ void Display() {
 
 }
 
-bool InitShader(GLuint &program, int ID) {
-    if (ID == 0) {
-        program = LinkProgramViaFile("./FairyVertexShader.glsl", "FairyFragmentShader.glsl");
-    }
-    else {
-        program = LinkProgramViaFile("./FairyVertexShader.glsl", "LightSourceFragmentShader.glsl");
-    }
-    if (!program)
-        printf("can't init shader program\n");
-    return program != 0;
-}
+//bool InitShader(GLuint &program, int ID) {
+//    if (ID == 0) {
+//        program = LinkProgramViaFile("./FairyVertexShader.glsl", "FairyFragmentShader.glsl");
+//    }
+//    else {
+//        program = LinkProgramViaFile("./FairyVertexShader.glsl", "LightSourceFragmentShader.glsl");
+//    }
+//    if (!program)
+//        printf("can't init shader program\n");
+//    return program != 0;
+//}
 
 // application
 
@@ -159,10 +159,12 @@ int main() {
 
     glViewport(0, 0, winW, winH);
 
-    if (!InitShader(program1, 0))
+    /*if (!InitShader(program1, 0))
         return 0;
     if (!InitShader(program2, 1))
-        return 0;
+        return 0;*/
+    fairyStandard.use();
+    fairyLightSource.use();
 
     glfwSwapInterval(1); // ensure no generated frame backlog
     
