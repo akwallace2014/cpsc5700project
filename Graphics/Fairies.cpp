@@ -14,7 +14,6 @@ Alisa Wallace, CPSC 5700 FQ21
 #include "SceneObject.h"
 
 // GPU identifiers
-GLuint vBuffer = 0;
 GLuint program1 = 0;
 GLuint program2 = 0;
 
@@ -28,14 +27,6 @@ Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
 SceneObject fairyMesh("Fairy", "./Healing_Fairy.obj");
-
-
-// reading from the object file will fill these vectors
-std::vector<vec3> points;           // 3D mesh vertices
-std::vector<int3> triangles;        // triplets of vertex indices
-std::vector<vec3> normals;          // surface normals
-std::vector<vec2> uvs;              // uv coordinates
-
 
 void adjustMovement(int ID) {
     // which direction are we moving in?
@@ -74,7 +65,7 @@ void Display() {
 
     // associate position input to shader with position array in vertex buffer
     VertexAttribPointer(program1, "point", 3, 0, (void*)0);
-    VertexAttribPointer(program1, "normal", 3, 0, (void*)(points.size() * sizeof(vec3)));
+    VertexAttribPointer(program1, "normal", 3, 0, (void*)(fairyMesh.pointsSize() * sizeof(vec3)));
     // get matrices based on changes resulting from callback functions/mouse input, send to shader
     for (int i = 0; i < 2; i++) {
             if (i == 0) {
