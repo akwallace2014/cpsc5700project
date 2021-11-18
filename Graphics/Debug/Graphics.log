@@ -1,0 +1,12 @@
+﻿  Fairies.cpp
+C:\Users\Alisa Wallace\Dropbox\school\_2021_fall\5700_graphics\code\Graphics\Fairies.cpp(134,30): warning C4305: '+=': truncation from 'double' to '_Ty'
+          with
+          [
+              _Ty=float
+          ]
+C:\Users\Alisa Wallace\Dropbox\school\_2021_fall\5700_graphics\code\Graphics\Fairies.cpp(141,30): warning C4305: '-=': truncation from 'double' to '_Ty'
+          with
+          [
+              _Ty=float
+          ]
+  Graphics.vcxproj -> C:\Users\Alisa Wallace\Dropbox\school\_2021_fall\5700_graphics\code\Graphics\Debug\Graphics.exe
