@@ -34,101 +34,82 @@ std::vector<int3> triangles;        // triplets of vertex indices
 std::vector<vec3> normals;          // surface normals
 std::vector<vec2> uvs;              // uv coordinates
 
-const char* vertexShader = R"(
-	#version 330
-    // changing to version 330 and adding layout (location = 0) causes wings to disappear!
-	layout (location = 0) in vec3 point;
-    layout (location = 1) in vec3 normal;
-	out vec3 vPoint, vNormal;
-	uniform mat4 modelview, persp;
-	void main() {
-		vPoint = (modelview*vec4(point, 1)).xyz;
-		vNormal = (modelview*vec4(normal, 0)).xyz;
-		gl_Position = 0.1 * persp*vec4(vPoint, 1);
-	}
-)";
+//const char* vertexShader = R"(
+//	#version 330
+//    // changing to version 330 and adding layout (location = 0) causes wings to disappear!
+//	layout (location = 0) in vec3 point;
+//    layout (location = 1) in vec3 normal;
+//	out vec3 vPoint, vNormal;
+//	uniform mat4 modelview, persp;
+//	void main() {
+//		vPoint = (modelview*vec4(point, 1)).xyz;
+//		vNormal = (modelview*vec4(normal, 0)).xyz;
+//		gl_Position = 0.1 * persp*vec4(vPoint, 1);
+//	}
+//)";
+//
+//const char* pixelShader = R"(
+//	#version 130
+//	in vec3 vPoint, vNormal;
+//    uniform vec3 lightPosition;
+//    uniform vec3 viewPosition;
+//
+//	uniform vec3 color = vec3(1.000, 0.714, 0.757);
+//    vec3 ambientLight = vec3(0.5f, 0.5f, 0.5f);
+//    vec3 diffuseLight = vec3(1.0f, 1.0f, 1.0f);
+//    vec3 specularLight = vec3(0.5f, 0.5f, 0.5f);
+//    float lightConstant = 1.0f;
+//    float lightLinear = 0.7f;
+//    float lightQuadratic = 1.8f;
+//    
+//    vec3 emission = vec3(1.0, 0.4, 0.8);
+//
+//    out vec4 pColor;
+//
+//	//uniform float amb = 0.05, dif = .7, spc = .5;  // lighting coefficients
+//    //uniform float constant = 1.0f, linear = 0.022f, quadratic = 0.0019f;
+//	
+//	void main() {
+//        
+//        vec3 ambient = ambientLight * color;
+//
+//        vec3 norm = normalize(vNormal);
+//        vec3 lightDir = normalize(lightPosition - vPoint);
+//        float diff = max(dot(norm, lightDir), 0.0);
+//        vec3 diffuse = diffuseLight * diff * color;
+//
+//        vec3 viewDir = normalize(viewPosition - vPoint);
+//        vec3 halfwayDir = normalize(lightDir + viewDir);
+//        vec3 reflectDir = reflect(-lightDir, norm);
+//        float spec = pow(max(dot(viewDir, halfwayDir), 0.0), 32.0f); 
+//        vec3 specular = specularLight * spec * color;
+//
+//        float distance = length(lightPosition - vPoint);
+//        float attenuation = 1.0 / (lightConstant + lightLinear * distance + lightQuadratic * (distance * distance));
+//
+//        ambient *= attenuation;
+//        diffuse *= attenuation;
+//        specular *= attenuation;
+//
+//        vec3 result = ambient + diffuse + specular;
+//        //result = result + result;
+//
+//        pColor = vec4((result), 1.0);
+//	}
+//)";
 
-const char* pixelShader = R"(
-	#version 130
-	in vec3 vPoint, vNormal;
-    uniform vec3 lightPosition;
-    uniform vec3 viewPosition;
+//const char* lightShader = R"(
+//	#version 330
+//    out vec4 color;
+//	void main() {
+//		color = vec4(1.0);
+//	}
+//)";
 
-	uniform vec3 color = vec3(1.000, 0.714, 0.757);
-    vec3 ambientLight = vec3(0.5f, 0.5f, 0.5f);
-    vec3 diffuseLight = vec3(1.0f, 1.0f, 1.0f);
-    vec3 specularLight = vec3(0.5f, 0.5f, 0.5f);
-    float lightConstant = 1.0f;
-    float lightLinear = 0.7f;
-    float lightQuadratic = 1.8f;
-    
-    vec3 emission = vec3(1.0, 0.4, 0.8);
+void initialSetup() {
 
-    out vec4 pColor;
+}
 
-	//uniform float amb = 0.05, dif = .7, spc = .5;  // lighting coefficients
-    //uniform float constant = 1.0f, linear = 0.022f, quadratic = 0.0019f;
-	
-	void main() {
-        
-        vec3 ambient = ambientLight * color;
-
-        vec3 norm = normalize(vNormal);
-        vec3 lightDir = normalize(lightPosition - vPoint);
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diffuseLight * diff * color;
-
-        vec3 viewDir = normalize(viewPosition - vPoint);
-        vec3 halfwayDir = normalize(lightDir + viewDir);
-        vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, halfwayDir), 0.0), 32.0f); 
-        vec3 specular = specularLight * spec * color;
-
-        float distance = length(lightPosition - vPoint);
-        float attenuation = 1.0 / (lightConstant + lightLinear * distance + lightQuadratic * (distance * distance));
-
-        ambient *= attenuation;
-        diffuse *= attenuation;
-        specular *= attenuation;
-
-        vec3 result = ambient + diffuse + specular;
-        //result = result + result;
-
-        pColor = vec4((result), 1.0);
-	}
-)";
-
-const char* lightShader = R"(
-	#version 330
-    out vec4 color;
-	void main() {
-		color = vec4(1.0);
-	}
-)";
-
-
-//void MouseButton(GLFWwindow* w, int button, int action, int mods) {
-//    if (action == GLFW_PRESS) {
-//        double x, y;
-//        glfwGetCursorPos(w, &x, &y);
-//        camera.MouseDown(x, y);
-//    }
-//}
-
-//void MouseMove(GLFWwindow* w, double x, double y) {
-//    if (glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-//        camera.MouseDrag(x, y);
-//    }
-//}
-
-//void MouseWheel(GLFWwindow* w, double xoffset, double yoffset) {
-//    if (yoffset > 0.0) {
-//        camera.MouseWheel(true);
-//    }
-//    else if (yoffset < 0.0) {
-//        camera.MouseWheel(false);
-//    }
-//}
 void adjustMovement(int ID) {
     // which direction are we moving in?
     if (moveForward[ID]) {
@@ -226,10 +207,10 @@ void InitVertexBuffer() {
 
 bool InitShader(GLuint &program, int ID) {
     if (ID == 0) {
-        program = LinkProgramViaCode(&vertexShader, &pixelShader);
+        program = LinkProgramViaFile("./FairyVertexShader.glsl", "FairyFragmentShader.glsl");
     }
     else {
-        program = LinkProgramViaCode(&vertexShader, &lightShader);
+        program = LinkProgramViaFile("./FairyVertexShader.glsl", "LightSourceFragmentShader.glsl");
     }
     if (!program)
         printf("can't init shader program\n");
@@ -254,20 +235,22 @@ void Close() {
 }
 
 int main() {
+
     glfwSetErrorCallback(ErrorGFLW);
     if (!glfwInit())
         return 1;
+    
     GLFWwindow* w = glfwCreateWindow(winW, winH, "Fairies", NULL, NULL);
     if (!w) {
         glfwTerminate();
         return 1;
     }
     glfwMakeContextCurrent(w);
-    /*glfwSetMouseButtonCallback(w, MouseButton);
-    glfwSetCursorPosCallback(w, MouseMove);
-    glfwSetScrollCallback(w, MouseWheel);*/
     glfwSetWindowSizeCallback(w, Resize);
+    glfwSetKeyCallback(w, Keyboard);
+
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
     if (!ReadAsciiObj((char*)objFile, points, triangles, &normals, &uvs)) {
         printf("Failed to read .obj file (enter any key to continue)\n");
         getchar();
@@ -276,21 +259,24 @@ int main() {
     printf("%i vertices, %i triangles, %i normals, %i uvs\n", points.size(), triangles.size(), normals.size(), uvs.size());
     Normalize(points, 0.8f);
     PrintGLErrors();
-    // TODO come back to viewport!
-    //glViewport(0, 0, winW/2, winH/2);
+
+    glViewport(0, 0, winW, winH);
+
     if (!InitShader(program1, 0))
         return 0;
     if (!InitShader(program2, 1))
         return 0;
+
     InitVertexBuffer();
-    glfwSetKeyCallback(w, Keyboard);
     glfwSwapInterval(1); // ensure no generated frame backlog
+    
     // event loop
     while (!glfwWindowShouldClose(w)) {
         Display();
         glfwSwapBuffers(w);
         glfwPollEvents();
     }
+
     Close();
     glfwDestroyWindow(w);
     glfwTerminate();
