@@ -10,13 +10,8 @@ vec3 specularLight = vec3(0.5f, 0.5f, 0.5f);
 float lightConstant = 1.0f;
 float lightLinear = 0.7f;
 float lightQuadratic = 1.8f;
-    
-vec3 emission = vec3(1.0, 0.4, 0.8);
 
 out vec4 pColor;
-
-//uniform float amb = 0.05, dif = .7, spc = .5;  // lighting coefficients
-//uniform float constant = 1.0f, linear = 0.022f, quadratic = 0.0019f;
 	
 void main() {
         
@@ -41,7 +36,6 @@ void main() {
     specular *= attenuation;
 
     vec3 result = ambient + diffuse + specular;
-    //result = result + result;
 
     pColor = vec4((result), 1.0);
 }
