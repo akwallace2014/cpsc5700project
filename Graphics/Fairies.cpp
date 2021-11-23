@@ -27,9 +27,35 @@ int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
-SceneObject fairyMesh("Fairy", "./Healing_Fairy.obj");
-Shader fairyStandard("./FairyVertexShader.glsl", "./FairyFragmentShader.glsl");
-Shader fairyLightSource("./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
+struct Object {
+    GLuint vertexBuffer, shaderProgram;
+    std::vector<vec3> points;           // 3D mesh vertices
+    std::vector<int3> triangles;        // triplets of vertex indices
+    std::vector<vec3> normals;          // surface normals
+    std::vector<vec2> uvs;              // uv coordinates
+
+};
+
+struct Object fairy;
+struct Object rock;
+
+void loadMesh(struct Object &obj, std::string filePath) {
+    if (!ReadAsciiObj(filePath.c_str(), obj.points, obj.triangles, &(obj.normals), &(obj.uvs))) {
+        printf("Failed to read .obj file for fairy (enter any key to continue)\n");
+        getchar();
+    }
+    printf("Fairy: %i vertices, %i triangles, %i normals, %i uvs\n", obj.points.size(), obj.triangles.size(), obj.normals.size(), obj.uvs.size());
+    Normalize(obj.points, 0.8f);
+
+    glGenBuffers(1, &obj.vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, obj.vertexBuffer);
+    int sizePoints = obj.points.size() * sizeof(vec3), sizeNormals = obj.normals.size() * sizeof(vec3), sizeUvs = obj.uvs.size() * sizeof(vec2);
+    glBufferData(GL_ARRAY_BUFFER, sizePoints + sizeNormals + sizeUvs, NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizePoints, obj.points.data());
+    glBufferSubData(GL_ARRAY_BUFFER, sizePoints, sizeNormals, obj.normals.data());
+    glBufferSubData(GL_ARRAY_BUFFER, sizePoints + sizeNormals, sizeUvs, obj.uvs.data());
+}
+
 
 void adjustMovement(int ID) {
     // which direction are we moving in?
@@ -49,6 +75,43 @@ void adjustMovement(int ID) {
     }
 }
 
+void drawFairy() {
+    glBindBuffer(GL_ARRAY_BUFFER, fairy.vertexBuffer);
+    VertexAttribPointer(fairy.shaderProgram, "point", 3, 0, (void*)0);
+    VertexAttribPointer(fairy.shaderProgram, "normal", 3, 0, (void*)(fairy.points.size() * sizeof(vec3)));
+
+    glUseProgram(fairy.shaderProgram);
+    adjustMovement(0);
+    mat4 translation = Translate(movement[0], movement[0], 0);
+    mat4 scale = Scale(0.1, 0.1, 0.1);
+    mat4 rotation = RotateY(30.0f);
+    SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
+    SetUniform(fairy.shaderProgram, "persp", camera.persp);
+
+    // render triangles
+    glDrawElements(GL_TRIANGLES, 3 * fairy.triangles.size(), GL_UNSIGNED_INT, &fairy.triangles[0]);
+    glFlush();
+}
+
+void drawRock() {
+    glBindBuffer(GL_ARRAY_BUFFER, rock.vertexBuffer);
+    VertexAttribPointer(rock.shaderProgram, "point", 3, 0, (void*)0);
+    VertexAttribPointer(rock.shaderProgram, "normal", 3, 0, (void*)(rock.points.size() * sizeof(vec3)));
+
+    glUseProgram(rock.shaderProgram);
+    mat4 translation = Translate(0.0f, -0.5f, -0.5f);
+    mat4 scale = Scale(0.5, 0.5, 0.5);
+    mat4 rotation = RotateY(30.0f);
+    SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
+    SetUniform(rock.shaderProgram, "persp", camera.persp);
+    SetUniform(rock.shaderProgram, "lightPosition", vec3(movement[0], movement[0], -5.00f));
+    SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
+
+    // render triangles
+    glDrawElements(GL_TRIANGLES, 3 * rock.triangles.size(), GL_UNSIGNED_INT, &rock.triangles[0]);
+    glFlush();
+}
+
 void Resize(GLFWwindow* window, int width, int height) {
     camera.Resize(winW = width, winH = height);
     glViewport(0, 0, winW, winH);
@@ -64,65 +127,15 @@ void Display() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    // associate position input to shader with position array in vertex buffer
-    VertexAttribPointer(fairyStandard.getID(), "point", 3, 0, (void*)0);
-    VertexAttribPointer(fairyStandard.getID(), "normal", 3, 0, (void*)(fairyMesh.pointsSize() * sizeof(vec3)));
-    // get matrices based on changes resulting from callback functions/mouse input, send to shader
-    for (int i = 0; i < 2; i++) {
-            if (i == 0) {
-                glUseProgram(fairyLightSource.getID());
-                adjustMovement(i);
-                mat4 translation = Translate(movement[i], movement[i], 0);
-                mat4 scale = Scale(0.25, 0.25, 0.25);
-                mat4 rotation = RotateY(30.0f);
-                SetUniform(fairyLightSource.getID(), "modelview", translation * camera.modelview * rotation * scale);
-                SetUniform(fairyLightSource.getID(), "persp", camera.persp);
-
-                // render triangles
-                glDrawElements(GL_TRIANGLES, 3 * fairyMesh.trianglesSize(), GL_UNSIGNED_INT, fairyMesh.trianglesStart());
-                glFlush();
-            }
-            else {
-                glUseProgram(fairyStandard.getID());
-                mat4 scale = Scale(0.25, 0.25, 0.25);
-                mat4 rotation = RotateY(30.0f);
-                SetUniform(fairyStandard.getID(), "modelview", camera.modelview * rotation * scale);
-                SetUniform(fairyStandard.getID(), "persp", camera.persp);
-                SetUniform(fairyStandard.getID(), "lightPosition", vec3(movement[0], movement[0], -5.00f));
-                SetUniform(fairyStandard.getID(), "viewPosition", camera.GetTran());
-
-                // render triangles
-                //glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, &triangles[0]);
-                glDrawElements(GL_TRIANGLES, 3 * fairyMesh.trianglesSize(), GL_UNSIGNED_INT, fairyMesh.trianglesStart());
-                glFlush();
-            }
-        //adjustMovement(i);
-        //mat4 translation = Translate(movement[i], movement[i], 0);
-        //mat4 scale = Scale(0.25, 0.25, 0.25);
-        //mat4 rotation = RotateY(30.0f);
-        //SetUniform(program, "modelview", translation * camera.modelview * rotation * scale);
-        //SetUniform(program, "persp", camera.persp);
-        //SetUniform(program, "lightPosition", vec3(movement[i], movement[i], -5.00f));
-        //SetUniform(program, "viewPosition", camera.GetTran());
-
-        //// render triangles
-        //glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, &triangles[0]);
-        //glFlush();
-    }
-
+    drawFairy();
+    drawRock();
 }
 
-//bool InitShader(GLuint &program, int ID) {
-//    if (ID == 0) {
-//        program = LinkProgramViaFile("./FairyVertexShader.glsl", "FairyFragmentShader.glsl");
-//    }
-//    else {
-//        program = LinkProgramViaFile("./FairyVertexShader.glsl", "LightSourceFragmentShader.glsl");
-//    }
-//    if (!program)
-//        printf("can't init shader program\n");
-//    return program != 0;
-//}
+void initShader(struct Object &obj, std::string vertexShaderPath, std::string fragShaderPath) { 
+    obj.shaderProgram = LinkProgramViaFile(vertexShaderPath.c_str(), fragShaderPath.c_str());
+    if (!obj.shaderProgram)
+        printf("can't init shader program\n");
+}
 
 // application
 
@@ -152,8 +165,12 @@ int main() {
 
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     printf("GL version: %s\n", glGetString(GL_VERSION));
-    fairyMesh.loadMeshFile();
-    fairyMesh.initVertexBuffer();
+
+    loadMesh(fairy, "./Healing_Fairy.obj");
+    loadMesh(rock, "./Rock.obj");
+
+    initShader(fairy, "./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
+    initShader(rock, "./RockVertexShader.glsl", "./RockFragmentShader.glsl");
  
     PrintGLErrors();
 
@@ -163,8 +180,7 @@ int main() {
         return 0;
     if (!InitShader(program2, 1))
         return 0;*/
-    fairyStandard.use();
-    fairyLightSource.use();
+    //rockShader.use();
 
     glfwSwapInterval(1); // ensure no generated frame backlog
     
@@ -174,8 +190,6 @@ int main() {
         glfwSwapBuffers(w);
         glfwPollEvents();
     }
-
-    fairyMesh.shutdown();
     glfwDestroyWindow(w);
     glfwTerminate();
 }
