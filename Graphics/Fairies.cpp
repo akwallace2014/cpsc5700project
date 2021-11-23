@@ -11,21 +11,14 @@ Alisa Wallace, CPSC 5700 FQ21
 #include <vector>
 #include "Mesh.h"
 #include "Camera.h"
-#include "SceneObject.h"
-#include "Shader.h"
 
-// GPU identifiers
-//GLuint program1 = 0;
-//GLuint program2 = 0;
-
-time_t startTime = clock();
+// TODO - update to account for multiple fairies
 vector<float> movement = { 0.0, 0.0 };
 vector<bool> moveForward = { true, false };
 
 // camera object allows us to use all the handy methods in the camera class
 int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
-vec3 lightPos(-0.2f, -1.0f, -0.3f);
 
 struct Object {
     GLuint vertexBuffer, shaderProgram;
@@ -55,7 +48,6 @@ void loadMesh(struct Object &obj, std::string filePath) {
     glBufferSubData(GL_ARRAY_BUFFER, sizePoints, sizeNormals, obj.normals.data());
     glBufferSubData(GL_ARRAY_BUFFER, sizePoints + sizeNormals, sizeUvs, obj.uvs.data());
 }
-
 
 void adjustMovement(int ID) {
     // which direction are we moving in?
@@ -175,12 +167,6 @@ int main() {
     PrintGLErrors();
 
     glViewport(0, 0, winW, winH);
-
-    /*if (!InitShader(program1, 0))
-        return 0;
-    if (!InitShader(program2, 1))
-        return 0;*/
-    //rockShader.use();
 
     glfwSwapInterval(1); // ensure no generated frame backlog
     
