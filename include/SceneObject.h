@@ -16,11 +16,12 @@ public:
 	size_t normalsSize();
 	size_t uvsSize();
 	const void* trianglesStart();
+	GLuint getVertexArray();
 	void shutdown();
 
 protected:
 	std::string name;
-	GLuint vertexBuffer;
+	GLuint vertexBuffer, vertexArray;
 	std::string meshFile;
 	std::vector<vec3> points;           // 3D mesh vertices
 	std::vector<int3> triangles;        // triplets of vertex indices

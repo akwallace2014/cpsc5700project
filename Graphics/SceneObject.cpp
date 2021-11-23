@@ -5,7 +5,6 @@
 SceneObject::SceneObject(std::string objectName, std::string meshFilePath) {
 	name = objectName;
 	meshFile = meshFilePath;
-	vertexBuffer = 0;
 }
 
 void SceneObject::loadMeshFile() {
@@ -19,7 +18,9 @@ void SceneObject::loadMeshFile() {
 }
 
 void SceneObject::initVertexBuffer() {
+	glGenVertexArrays(1, &vertexArray);
 	glGenBuffers(1, &vertexBuffer);
+	glBindVertexArray(vertexArray);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	int sizePoints = points.size() * sizeof(vec3), sizeNormals = normals.size() * sizeof(vec3), sizeUvs = uvs.size() * sizeof(vec2);
 	glBufferData(GL_ARRAY_BUFFER, sizePoints + sizeNormals + sizeUvs, NULL, GL_STATIC_DRAW);
@@ -51,4 +52,8 @@ const void* SceneObject::trianglesStart() {
 void SceneObject::shutdown() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glDeleteBuffers(1, &vertexBuffer);
+}
+
+GLuint SceneObject::getVertexArray() {
+	return vertexArray;
 }
