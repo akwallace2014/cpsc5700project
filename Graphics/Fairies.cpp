@@ -21,6 +21,8 @@ vector<bool> moveForward = { true, false };
 int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 
+const int NUM_FAIRIES = 3;
+
 struct Object {
     GLuint vertexBuffer, shaderProgram;
     int textureID;
@@ -32,6 +34,16 @@ struct Object {
 
 struct Object fairy;
 struct Object rock;
+
+struct MovingFairy {
+    float moveX = 0.0;
+    float moveY = 0.0;
+    bool moveForward = true;
+    bool moveUp = true;
+    vector<vec3> targetPaths;
+};
+
+struct MovingFairy fairy1;
 
 void loadMesh(struct Object &obj, std::string filePath) {
     if (!ReadAsciiObj(filePath.c_str(), obj.points, obj.triangles, &(obj.normals), &(obj.uvs))) {
@@ -54,20 +66,32 @@ void loadTexture(struct Object& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
-void adjustMovement(int ID) {
-    // which direction are we moving in?
-    if (moveForward[ID]) {
-        movement[ID] += 0.003;
-        if (movement[ID] >= 1.0f) {
+void adjustMovement(MovingFairy &fairy) {
+    // adjust x direction
+    if (fairy.moveForward) {
+        fairy.moveX += 0.002;
+        if (fairy.moveX >= 1.1f) {
             // we've reached the edge, reverse
-            moveForward[ID] = !moveForward[ID];
+           fairy.moveForward = false;
         }
     }
     else {
-        movement[ID] -= 0.003;
-        if (movement[ID] <= -1.0f) {
-            // we've reached opposite edge, reverse
-            moveForward[ID] = !moveForward[ID];
+        fairy.moveX -= 0.002;
+        if (fairy.moveX <= -1.1f) {
+            fairy.moveForward = true;
+        }
+    }
+    // adjust y direction
+    if (fairy.moveUp) {
+        fairy.moveY += 0.002;
+        if (fairy.moveY >= 1.1f) {
+            fairy.moveUp = false;
+        }
+    }
+    else {
+        fairy.moveY -= 0.002;
+        if (fairy.moveY <= -1.1f) {
+            fairy.moveUp = true;
         }
     }
 }
@@ -78,9 +102,9 @@ void drawFairy() {
     VertexAttribPointer(fairy.shaderProgram, "normal", 3, 0, (void*)(fairy.points.size() * sizeof(vec3)));
 
     glUseProgram(fairy.shaderProgram);
-    adjustMovement(0);
-    mat4 translation = Translate(movement[0], movement[0], 0);
-    mat4 scale = Scale(0.2, 0.2, 0.2);
+    adjustMovement(fairy1);
+    mat4 translation = Translate(fairy1.moveX, fairy1.moveY, 0);
+    mat4 scale = Scale(0.1, 0.1, 0.1);
     mat4 rotation = RotateY(30.0f);
     SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(fairy.shaderProgram, "persp", camera.persp);
@@ -104,7 +128,7 @@ void drawRock() {
     SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
-    SetUniform(rock.shaderProgram, "lightPosition", vec3(movement[0], movement[0], -5.00f));
+    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1.moveX, fairy1.moveY, -5.00f));
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
@@ -121,7 +145,7 @@ void Resize(GLFWwindow* window, int width, int height) {
 
 void Display() {
     // clear background
-    glClearColor(0.2f, 0.2f, 0.2f, 1);
+    glClearColor(0.005f, 0.005f, 0.1f, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
