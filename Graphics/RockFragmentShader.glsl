@@ -5,7 +5,7 @@ uniform sampler2D textureImage;
 uniform vec3 lightPosition;
 uniform vec3 viewPosition;
 
-vec3 ambientLight = vec3(0.5f, 0.5f, 0.5f);
+vec3 ambientLight = vec3(0.1f, 0.1f, 0.1f);
 vec3 diffuseLight = vec3(1.0f, 1.0f, 1.0f);
 vec3 specularLight = vec3(0.5f, 0.5f, 0.5f);
 float lightConstant = 1.0f;
