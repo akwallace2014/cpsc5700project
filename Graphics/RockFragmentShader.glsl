@@ -1,9 +1,10 @@
 #version 130
 in vec3 vPoint, vNormal;
+in vec2 vUv;
+uniform sampler2D textureImage;
 uniform vec3 lightPosition;
 uniform vec3 viewPosition;
 
-uniform vec3 color = vec3(1.000, 0.714, 0.757);
 vec3 ambientLight = vec3(0.5f, 0.5f, 0.5f);
 vec3 diffuseLight = vec3(1.0f, 1.0f, 1.0f);
 vec3 specularLight = vec3(0.5f, 0.5f, 0.5f);
@@ -14,7 +15,8 @@ float lightQuadratic = 1.8f;
 out vec4 pColor;
 	
 void main() {
-        
+    
+    vec3 color = texture(textureImage, vUv).rgb;
     vec3 ambient = ambientLight * color;
 
     vec3 norm = normalize(vNormal);
@@ -35,7 +37,7 @@ void main() {
     diffuse *= attenuation;
     specular *= attenuation;
 
-    vec3 result = (ambient + diffuse + specular) * 0.5;
+    vec3 result = (ambient + diffuse + specular);
 
     pColor = vec4((result), 1.0);
 }

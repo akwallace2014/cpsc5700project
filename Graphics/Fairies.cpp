@@ -11,6 +11,7 @@ Alisa Wallace, CPSC 5700 FQ21
 #include <vector>
 #include "Mesh.h"
 #include "Camera.h"
+#include "Misc.h"
 
 // TODO - update to account for multiple fairies
 vector<float> movement = { 0.0, 0.0 };
@@ -22,11 +23,11 @@ Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 
 struct Object {
     GLuint vertexBuffer, shaderProgram;
+    int textureID;
     std::vector<vec3> points;           // 3D mesh vertices
     std::vector<int3> triangles;        // triplets of vertex indices
     std::vector<vec3> normals;          // surface normals
     std::vector<vec2> uvs;              // uv coordinates
-
 };
 
 struct Object fairy;
@@ -47,6 +48,10 @@ void loadMesh(struct Object &obj, std::string filePath) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizePoints, obj.points.data());
     glBufferSubData(GL_ARRAY_BUFFER, sizePoints, sizeNormals, obj.normals.data());
     glBufferSubData(GL_ARRAY_BUFFER, sizePoints + sizeNormals, sizeUvs, obj.uvs.data());
+}
+
+void loadTexture(struct Object& obj, std::string filePath) {
+    obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
 void adjustMovement(int ID) {
@@ -89,17 +94,22 @@ void drawRock() {
     glBindBuffer(GL_ARRAY_BUFFER, rock.vertexBuffer);
     VertexAttribPointer(rock.shaderProgram, "point", 3, 0, (void*)0);
     VertexAttribPointer(rock.shaderProgram, "normal", 3, 0, (void*)(rock.points.size() * sizeof(vec3)));
+    int pSize = rock.points.size() * sizeof(vec3), nSize = rock.normals.size() * sizeof(vec3);
+    VertexAttribPointer(rock.shaderProgram, "uv", 2, 0, (void*)(pSize + nSize));
 
     glUseProgram(rock.shaderProgram);
     mat4 translation = Translate(0.0f, -0.5f, -0.5f);
     mat4 scale = Scale(0.5, 0.5, 0.5);
     mat4 rotation = RotateY(30.0f);
+    SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
     SetUniform(rock.shaderProgram, "lightPosition", vec3(movement[0], movement[0], -5.00f));
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
+    glBindTexture(GL_TEXTURE_2D, rock.textureID);
+    glActiveTexture(GL_TEXTURE0 + 0);
     glDrawElements(GL_TRIANGLES, 3 * rock.triangles.size(), GL_UNSIGNED_INT, &rock.triangles[0]);
     glFlush();
 }
@@ -160,6 +170,7 @@ int main() {
 
     loadMesh(fairy, "./Healing_Fairy.obj");
     loadMesh(rock, "./Rock.obj");
+    loadTexture(rock, "./RockGrey.tga");
 
     initShader(fairy, "./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
     initShader(rock, "./RockVertexShader.glsl", "./RockFragmentShader.glsl");
