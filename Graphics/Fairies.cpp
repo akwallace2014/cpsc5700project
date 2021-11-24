@@ -12,6 +12,7 @@ Alisa Wallace, CPSC 5700 FQ21
 #include "Mesh.h"
 #include "Camera.h"
 #include "Misc.h"
+#include <math.h>
 
 // TODO - update to account for multiple fairies
 vector<float> movement = { 0.0, 0.0 };
@@ -36,12 +37,29 @@ struct Object fairy;
 struct Object rock;
 
 struct MovingFairy {
-    float moveX = 0.0;
-    float moveY = 0.0;
-    bool moveForward = true;
-    bool moveUp = true;
-    vector<vec3> targetPaths;
+    // current coordinates
+    float x;
+    float y;
+    // increments made to current position in order to reach target
+    float xIncr;
+    float yIncr;
+    // target coordinates
+    float targetX;
+    float targetY;
+    // total distance needed to move 
+    float distX;
+    float distY;
+    // total distance moved
+    float moveX;
+    float moveY;
+    // index of targets vector
+    int currentPosition = 0;
+    int targetPosition = 1;
+    /*bool moveForward = true;
+    bool moveUp = true;*/
 };
+
+vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
 
 struct MovingFairy fairy1;
 
@@ -66,34 +84,85 @@ void loadTexture(struct Object& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
+void updateTargets(MovingFairy &fairy) {
+    vec2 currentPos = targets.at(fairy.currentPosition);
+    fairy.x = currentPos.x;
+    fairy.y = currentPos.y;
+
+    vec2 firstTarget = targets.at(fairy.targetPosition);
+    fairy.targetX = firstTarget.x;
+    fairy.targetY = firstTarget.y;
+
+    fairy.distX = fairy.targetX - fairy.x;
+    fairy.distY = fairy.targetY - fairy.y;
+    fairy.xIncr = fairy.distX * 0.002;
+    fairy.yIncr = fairy.distY * 0.002;
+    fairy.moveX = 0.0;
+    fairy.moveY = 0.0;
+    printf("\nTarget updated to %d, targetX = %f, targetY = %f, distX = %f, distY = %f, xIncr = %f, yIncr = %f\n", fairy.targetPosition, fairy.targetX, fairy.targetY, fairy.distX, fairy.distY, fairy.xIncr, fairy.yIncr);
+}
+
+void incrementPosition(MovingFairy& fairy) {
+    
+    ++fairy.currentPosition;
+    if (fairy.currentPosition > targets.size() - 1) {
+        fairy.currentPosition = 0;
+    }
+
+    ++fairy.targetPosition;
+    if (fairy.targetPosition > targets.size() - 1) {
+        fairy.targetPosition = 0;
+    }
+    
+    /*vec2 newTarget = targets.at(fairy.targetPosition);
+    fairy.targetX = newTarget.x;
+    fairy.targetY = newTarget.y;*/
+    updateTargets(fairy);
+    
+}
+
 void adjustMovement(MovingFairy &fairy) {
     // adjust x direction
-    if (fairy.moveForward) {
-        fairy.moveX += 0.002;
-        if (fairy.moveX >= 1.1f) {
-            // we've reached the edge, reverse
-           fairy.moveForward = false;
-        }
+    //if (fairy.moveForward) {
+    //    fairy.moveX += 0.002;
+    //    if (fairy.moveX >= 1.1f) {
+    //        // we've reached the edge, reverse
+    //       fairy.moveForward = false;
+    //    }
+    //}
+    //else {
+    //    fairy.moveX -= 0.002;
+    //    if (fairy.moveX <= -1.1f) {
+    //        fairy.moveForward = true;
+    //    }
+    //}
+    //// adjust y direction
+    //if (fairy.moveUp) {
+    //    fairy.moveY += 0.002;
+    //    if (fairy.moveY >= 1.1f) {
+    //        fairy.moveUp = false;
+    //    }
+    //}
+    //else {
+    //    fairy.moveY -= 0.002;
+    //    if (fairy.moveY <= -1.1f) {
+    //        fairy.moveUp = true;
+    //    }
+    //}
+    
+    fairy.x += fairy.xIncr;
+    fairy.moveX += abs(fairy.xIncr);
+    fairy.y += fairy.yIncr;
+    fairy.moveY += abs(fairy.yIncr);
+
+    vec2 startPos = targets.at(fairy.currentPosition);
+
+    // if we've met or exceeded the target position, switch to the next position 
+    if ((abs(fairy.moveX) > abs(fairy.targetX - startPos.x))) {
+        incrementPosition(fairy);
     }
-    else {
-        fairy.moveX -= 0.002;
-        if (fairy.moveX <= -1.1f) {
-            fairy.moveForward = true;
-        }
-    }
-    // adjust y direction
-    if (fairy.moveUp) {
-        fairy.moveY += 0.002;
-        if (fairy.moveY >= 1.1f) {
-            fairy.moveUp = false;
-        }
-    }
-    else {
-        fairy.moveY -= 0.002;
-        if (fairy.moveY <= -1.1f) {
-            fairy.moveUp = true;
-        }
-    }
+
+    
 }
 
 void drawFairy() {
@@ -103,7 +172,7 @@ void drawFairy() {
 
     glUseProgram(fairy.shaderProgram);
     adjustMovement(fairy1);
-    mat4 translation = Translate(fairy1.moveX, fairy1.moveY, 0);
+    mat4 translation = Translate(fairy1.x, fairy1.y, 0);
     mat4 scale = Scale(0.1, 0.1, 0.1);
     mat4 rotation = RotateY(30.0f);
     SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
@@ -128,7 +197,7 @@ void drawRock() {
     SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
-    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1.moveX, fairy1.moveY, -5.00f));
+    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1.x, fairy1.y, -5.00f));
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
@@ -145,7 +214,8 @@ void Resize(GLFWwindow* window, int width, int height) {
 
 void Display() {
     // clear background
-    glClearColor(0.005f, 0.005f, 0.1f, 1);
+    //glClearColor(0.005f, 0.005f, 0.1f, 1);
+    glClearColor(0.0f, 0.0f, 0.02f, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
     glDisable(GL_CULL_FACE);
@@ -200,13 +270,14 @@ int main() {
 
     initShader(fairy, "./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
     initShader(rock, "./RockVertexShader.glsl", "./RockFragmentShader.glsl");
- 
     PrintGLErrors();
 
     glViewport(0, 0, winW, winH);
 
     glfwSwapInterval(1); // ensure no generated frame backlog
     
+    updateTargets(fairy1);
+
     // event loop
     while (!glfwWindowShouldClose(w)) {
         Display();
