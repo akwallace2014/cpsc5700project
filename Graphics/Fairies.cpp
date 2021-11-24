@@ -80,7 +80,7 @@ void drawFairy() {
     glUseProgram(fairy.shaderProgram);
     adjustMovement(0);
     mat4 translation = Translate(movement[0], movement[0], 0);
-    mat4 scale = Scale(0.1, 0.1, 0.1);
+    mat4 scale = Scale(0.2, 0.2, 0.2);
     mat4 rotation = RotateY(30.0f);
     SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(fairy.shaderProgram, "persp", camera.persp);
@@ -127,6 +127,7 @@ void Display() {
     glDisable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
+    glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     drawFairy();
@@ -162,6 +163,7 @@ int main() {
         return 1;
     }
     glfwMakeContextCurrent(w);
+    glfwWindowHint(GLFW_SAMPLES, 8);
     glfwSetWindowSizeCallback(w, Resize);
     glfwSetKeyCallback(w, Keyboard);
 
