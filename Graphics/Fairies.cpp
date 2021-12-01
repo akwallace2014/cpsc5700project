@@ -13,13 +13,14 @@ Alisa Wallace, CPSC 5700 FQ21
 #include "Camera.h"
 #include "Misc.h"
 #include <math.h>
+#include "MovingObject.h"
 
 
 // camera object allows us to use all the handy methods in the camera class
 int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 
-const int NUM_FAIRIES = 3;
+const int NUM_FAIRIES = 4;
 
 struct Object {
     GLuint vertexBuffer, shaderProgram;
@@ -33,32 +34,22 @@ struct Object {
 struct Object fairy;
 struct Object rock;
 
-struct MovingFairy {
-    // current coordinates
-    float x;
-    float y;
-    // increments made to current position in order to reach target
-    float xIncr;
-    float yIncr;
-    // target coordinates
-    float targetX;
-    float targetY;
-    // total distance needed to move 
-    float distX;
-    float distY;
-    // total distance moved
-    float moveX;
-    float moveY;
-    // index of targets vector
-    int currentPosition = 0;
-    int targetPosition = 1;
-    /*bool moveForward = true;
-    bool moveUp = true;*/
-};
-
 vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
 
-struct MovingFairy fairy1;
+std::vector<MovingObject*> movingFairies;
+
+void initializeFairies() {
+    for (int i = 0; i < NUM_FAIRIES; i++) {
+        MovingObject* fairy = new MovingObject(targets, i);
+        movingFairies.push_back(fairy);
+    }
+}
+
+void cleanup() {
+    for (int i = 0; i < NUM_FAIRIES; i++) {
+        delete movingFairies.at(i);
+    }
+}
 
 void loadMesh(struct Object &obj, std::string filePath) {
     if (!ReadAsciiObj(filePath.c_str(), obj.points, obj.triangles, &(obj.normals), &(obj.uvs))) {
@@ -81,95 +72,14 @@ void loadTexture(struct Object& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
-void updateTargets(MovingFairy &fairy) {
-    vec2 currentPos = targets.at(fairy.currentPosition);
-    fairy.x = currentPos.x;
-    fairy.y = currentPos.y;
-
-    vec2 firstTarget = targets.at(fairy.targetPosition);
-    fairy.targetX = firstTarget.x;
-    fairy.targetY = firstTarget.y;
-
-    fairy.distX = fairy.targetX - fairy.x;
-    fairy.distY = fairy.targetY - fairy.y;
-    fairy.xIncr = fairy.distX * 0.002;
-    fairy.yIncr = fairy.distY * 0.002;
-    fairy.moveX = 0.0;
-    fairy.moveY = 0.0;
-    printf("\nTarget updated to %d, targetX = %f, targetY = %f, distX = %f, distY = %f, xIncr = %f, yIncr = %f\n", fairy.targetPosition, fairy.targetX, fairy.targetY, fairy.distX, fairy.distY, fairy.xIncr, fairy.yIncr);
-}
-
-void incrementPosition(MovingFairy& fairy) {
-    
-    ++fairy.currentPosition;
-    if (fairy.currentPosition > targets.size() - 1) {
-        fairy.currentPosition = 0;
-    }
-
-    ++fairy.targetPosition;
-    if (fairy.targetPosition > targets.size() - 1) {
-        fairy.targetPosition = 0;
-    }
-    
-    /*vec2 newTarget = targets.at(fairy.targetPosition);
-    fairy.targetX = newTarget.x;
-    fairy.targetY = newTarget.y;*/
-    updateTargets(fairy);
-    
-}
-
-void adjustMovement(MovingFairy &fairy) {
-    // adjust x direction
-    //if (fairy.moveForward) {
-    //    fairy.moveX += 0.002;
-    //    if (fairy.moveX >= 1.1f) {
-    //        // we've reached the edge, reverse
-    //       fairy.moveForward = false;
-    //    }
-    //}
-    //else {
-    //    fairy.moveX -= 0.002;
-    //    if (fairy.moveX <= -1.1f) {
-    //        fairy.moveForward = true;
-    //    }
-    //}
-    //// adjust y direction
-    //if (fairy.moveUp) {
-    //    fairy.moveY += 0.002;
-    //    if (fairy.moveY >= 1.1f) {
-    //        fairy.moveUp = false;
-    //    }
-    //}
-    //else {
-    //    fairy.moveY -= 0.002;
-    //    if (fairy.moveY <= -1.1f) {
-    //        fairy.moveUp = true;
-    //    }
-    //}
-    
-    fairy.x += fairy.xIncr;
-    fairy.moveX += abs(fairy.xIncr);
-    fairy.y += fairy.yIncr;
-    fairy.moveY += abs(fairy.yIncr);
-
-    vec2 startPos = targets.at(fairy.currentPosition);
-
-    // if we've met or exceeded the target position, switch to the next position 
-    if ((abs(fairy.moveX) > abs(fairy.targetX - startPos.x))) {
-        incrementPosition(fairy);
-    }
-
-    
-}
-
-void drawFairy() {
+void drawFairy(MovingObject* movingFairy) {
     glBindBuffer(GL_ARRAY_BUFFER, fairy.vertexBuffer);
     VertexAttribPointer(fairy.shaderProgram, "point", 3, 0, (void*)0);
     VertexAttribPointer(fairy.shaderProgram, "normal", 3, 0, (void*)(fairy.points.size() * sizeof(vec3)));
 
     glUseProgram(fairy.shaderProgram);
-    adjustMovement(fairy1);
-    mat4 translation = Translate(fairy1.x, fairy1.y, 0);
+    movingFairy->adjustMovement();
+    mat4 translation = Translate(movingFairy->x(), movingFairy->y(), 0);
     mat4 scale = Scale(0.1, 0.1, 0.1);
     mat4 rotation = RotateY(30.0f);
     SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
@@ -194,7 +104,8 @@ void drawRock() {
     SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
-    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1.x, fairy1.y, -5.00f));
+    MovingObject* fairy1 = movingFairies.at(0);
+    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1->x(), fairy1->y(), -5.00f));
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
@@ -221,7 +132,10 @@ void Display() {
     glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    drawFairy();
+    for (int i = 0; i < NUM_FAIRIES; i++) {
+        drawFairy(movingFairies.at(i));
+    }
+    
     drawRock();
 }
 
@@ -273,7 +187,8 @@ int main() {
 
     glfwSwapInterval(1); // ensure no generated frame backlog
     
-    updateTargets(fairy1);
+    initializeFairies();
+
 
     // event loop
     while (!glfwWindowShouldClose(w)) {
@@ -281,6 +196,7 @@ int main() {
         glfwSwapBuffers(w);
         glfwPollEvents();
     }
+    cleanup();
     glfwDestroyWindow(w);
     glfwTerminate();
 }
