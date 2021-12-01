@@ -14,9 +14,6 @@ Alisa Wallace, CPSC 5700 FQ21
 #include "Misc.h"
 #include <math.h>
 
-// TODO - update to account for multiple fairies
-vector<float> movement = { 0.0, 0.0 };
-vector<bool> moveForward = { true, false };
 
 // camera object allows us to use all the handy methods in the camera class
 int winW = 750, winH = 750;
@@ -257,7 +254,7 @@ int main() {
         return 1;
     }
     glfwMakeContextCurrent(w);
-    glfwWindowHint(GLFW_SAMPLES, 8);
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwSetWindowSizeCallback(w, Resize);
     glfwSetKeyCallback(w, Keyboard);
 
