@@ -1,4 +1,3 @@
-#pragma once
 #ifndef MOVINGOBJECT_H
 #define MOVINGOBJECT_H
 
@@ -9,14 +8,17 @@
 class MovingObject {
 public:
     // Constructor
-	MovingObject(std::vector<vec2> targetPositions, int startIndex = 0, float movementFactor = 0.002);
+	MovingObject(std::vector<vec2> targetPositions, int startIndex = 0, float movementFactor = 0.0015);
 
     // adjusts the object's location coordinates 
 	void adjustMovement();
 
-    // returns the object's current respective coordinate
+    // returns the object's current individual coordinate
     float x();
     float y();
+
+    // returns the object's current coordinates as a vec3
+    vec3 position();
 
 private:
     // factor by which to adjust coordinates in each call to adjustMovement

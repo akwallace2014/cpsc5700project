@@ -37,6 +37,10 @@ float MovingObject::y() {
 	return currentPos.y;
 }
 
+vec3 MovingObject::position() {
+	return vec3(currentPos, -5.0f);
+}
+
 void MovingObject::incrementIndex() {
 	++currentIndex;
 	if (currentIndex > targets.size() - 1) {

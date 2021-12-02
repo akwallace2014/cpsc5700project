@@ -37,12 +37,15 @@ struct Object rock;
 vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
 
 std::vector<MovingObject*> movingFairies;
+vec3 fairyPositions[10];
 
 void initializeFairies() {
     for (int i = 0; i < NUM_FAIRIES; i++) {
         MovingObject* fairy = new MovingObject(targets, i);
         movingFairies.push_back(fairy);
+        fairyPositions[i] = fairy->position();
     }
+    printf("\nFairies initialized\n");
 }
 
 void cleanup() {
@@ -72,6 +75,12 @@ void loadTexture(struct Object& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
+void updateFairyPositions() {
+    for (int i = 0; i < NUM_FAIRIES; i++) {
+        fairyPositions[i] = movingFairies.at(i)->position();
+    }
+}
+
 void drawFairy(MovingObject* movingFairy) {
     glBindBuffer(GL_ARRAY_BUFFER, fairy.vertexBuffer);
     VertexAttribPointer(fairy.shaderProgram, "point", 3, 0, (void*)0);
@@ -98,14 +107,20 @@ void drawRock() {
     VertexAttribPointer(rock.shaderProgram, "uv", 2, 0, (void*)(pSize + nSize));
 
     glUseProgram(rock.shaderProgram);
-    mat4 translation = Translate(0.0f, -0.5f, -0.5f);
-    mat4 scale = Scale(0.5, 0.5, 0.5);
-    mat4 rotation = RotateY(30.0f);
+    mat4 translation = Translate(0.0f, -0.6f, -0.6f);
+    mat4 scale = Scale(0.75, 0.75, 0.75);
+    mat4 rotation = RotateX(-15.0f);
     SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
-    MovingObject* fairy1 = movingFairies.at(0);
-    SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1->x(), fairy1->y(), -5.00f));
+    //MovingObject* fairy1 = movingFairies.at(0);
+    SetUniform(rock.shaderProgram, "numLights", NUM_FAIRIES);
+    updateFairyPositions();
+    SetUniform(rock.shaderProgram, "lights[0]", fairyPositions[0]);
+    SetUniform(rock.shaderProgram, "lights[1]", fairyPositions[1]);
+    SetUniform(rock.shaderProgram, "lights[2]", fairyPositions[2]);
+    SetUniform(rock.shaderProgram, "lights[3]", fairyPositions[3]);
+    //SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1->x(), fairy1->y(), -5.00f));
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
