@@ -29,16 +29,20 @@ void MovingObject::adjustMovement() {
 	}
 }
 
-float MovingObject::x() {
-	return currentPos.x;
-}
-
-float MovingObject::y() {
-	return currentPos.y;
-}
-
 vec3 MovingObject::position() {
 	return vec3(currentPos, -5.0f);
+}
+
+mat4 MovingObject::translationMatrix() {
+	return Translate(currentPos.x, currentPos.y, 0.0f);
+}
+
+mat4 MovingObject::scaleMatrix() {
+	return Scale(0.1f, 0.1f, 0.1f);
+}
+
+mat4 MovingObject::rotationMatrix() {
+	return RotateY(rotationY);
 }
 
 void MovingObject::incrementIndex() {
@@ -60,6 +64,12 @@ void MovingObject::updateTarget() {
 	movingFrom = currentPos;
 	movingTowards = targets.at(targetIndex);
 	totalDistance = movingTowards - currentPos;
+	if (totalDistance.x > 0.0f) {
+		rotationY = 40.0f;
+	}
+	else {
+		rotationY = -90.0f;
+	}
 	increments = totalDistance * movementRate;
 	distMoved = vec2(0.0);
 }

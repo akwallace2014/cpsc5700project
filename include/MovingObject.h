@@ -14,14 +14,26 @@ public:
 	void adjustMovement();
 
     // returns the object's current individual coordinate
-    float x();
-    float y();
+    //float x();
+    //float y();
 
     // returns the object's current coordinates as a vec3
     vec3 position();
 
+    mat4 translationMatrix();
+
+    // hardcoded scale values for now
+    mat4 scaleMatrix();
+
+    // only rotates along the y-axis for now
+    mat4 rotationMatrix();
+
+
 private:
-    // factor by which to adjust coordinates in each call to adjustMovement
+    // degrees to rotate along y-axis
+    float rotationY;
+
+    // factor by which to adjust location coordinates in each call to adjustMovement
     float movementRate;
 
     // coordinates of target positions for the object to move towards
