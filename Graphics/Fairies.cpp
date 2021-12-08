@@ -20,7 +20,7 @@ Alisa Wallace, CPSC 5700 FQ21
 int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 
-const int NUM_FAIRIES = 4;
+const int NUM_FAIRIES = 5;
 
 struct Object {
     GLuint vertexBuffer, shaderProgram;
@@ -37,7 +37,7 @@ struct Object rock;
 vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
 
 std::vector<MovingObject*> movingFairies;
-vec3 fairyPositions[10];
+vec3 fairyPositions[5];
 
 void initializeFairies() {
     for (int i = 0; i < NUM_FAIRIES; i++) {
@@ -88,10 +88,7 @@ void drawFairy(MovingObject* movingFairy) {
 
     glUseProgram(fairy.shaderProgram);
     movingFairy->adjustMovement();
-    mat4 translation = Translate(movingFairy->x(), movingFairy->y(), 0);
-    mat4 scale = Scale(0.1, 0.1, 0.1);
-    mat4 rotation = RotateY(30.0f);
-    SetUniform(fairy.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
+    SetUniform(fairy.shaderProgram, "modelview", movingFairy->translationMatrix() * camera.modelview  *  movingFairy->rotationMatrix()* movingFairy->scaleMatrix());
     SetUniform(fairy.shaderProgram, "persp", camera.persp);
 
     // render triangles
@@ -113,14 +110,13 @@ void drawRock() {
     SetUniform(rock.shaderProgram, "textureImage", 0);
     SetUniform(rock.shaderProgram, "modelview", translation * camera.modelview * rotation * scale);
     SetUniform(rock.shaderProgram, "persp", camera.persp);
-    //MovingObject* fairy1 = movingFairies.at(0);
     SetUniform(rock.shaderProgram, "numLights", NUM_FAIRIES);
     updateFairyPositions();
     SetUniform(rock.shaderProgram, "lights[0]", fairyPositions[0]);
     SetUniform(rock.shaderProgram, "lights[1]", fairyPositions[1]);
     SetUniform(rock.shaderProgram, "lights[2]", fairyPositions[2]);
     SetUniform(rock.shaderProgram, "lights[3]", fairyPositions[3]);
-    //SetUniform(rock.shaderProgram, "lightPosition", vec3(fairy1->x(), fairy1->y(), -5.00f));
+    SetUniform(rock.shaderProgram, "lights[4]", fairyPositions[4]);
     SetUniform(rock.shaderProgram, "viewPosition", camera.GetTran());
 
     // render triangles
@@ -136,8 +132,6 @@ void Resize(GLFWwindow* window, int width, int height) {
 }
 
 void Display() {
-    // clear background
-    //glClearColor(0.005f, 0.005f, 0.1f, 1);
     glClearColor(0.0f, 0.0f, 0.02f, 1);
     glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_DEPTH_BUFFER_BIT);
