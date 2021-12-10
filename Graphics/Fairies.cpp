@@ -1,6 +1,7 @@
 /**
-Fairies.cpp
-Alisa Wallace, CPSC 5700 FQ21
+* Fairies.cpp - Flying fairy lighting animation
+* Alisa Wallace, CPSC 5700 FQ21 Final Project
+* Seattle University
 */
 
 #include <glad.h>
@@ -15,14 +16,12 @@ Alisa Wallace, CPSC 5700 FQ21
 #include <math.h>
 #include "MovingObject.h"
 
-
-// camera object allows us to use all the handy methods in the camera class
 int winW = 750, winH = 750;
 Camera camera((float)winW / winH, vec3(0, 0, 0), vec3(0, 0, -5));
 
 const int NUM_FAIRIES = 5;
 
-struct Object {
+struct SceneObject {
     GLuint vertexBuffer, shaderProgram;
     int textureID;
     std::vector<vec3> points;           // 3D mesh vertices
@@ -31,8 +30,8 @@ struct Object {
     std::vector<vec2> uvs;              // uv coordinates
 };
 
-struct Object fairy;
-struct Object rock;
+struct SceneObject fairy;
+struct SceneObject rock;
 
 //vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
 //
@@ -71,7 +70,7 @@ void cleanup() {
     }
 }
 
-void loadMesh(struct Object &obj, std::string filePath) {
+void loadMesh(struct SceneObject &obj, std::string filePath) {
     if (!ReadAsciiObj(filePath.c_str(), obj.points, obj.triangles, &(obj.normals), &(obj.uvs))) {
         printf("Failed to read .obj file for fairy (enter any key to continue)\n");
         getchar();
@@ -88,7 +87,7 @@ void loadMesh(struct Object &obj, std::string filePath) {
     glBufferSubData(GL_ARRAY_BUFFER, sizePoints + sizeNormals, sizeUvs, obj.uvs.data());
 }
 
-void loadTexture(struct Object& obj, std::string filePath) {
+void loadTexture(struct SceneObject& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
@@ -165,7 +164,7 @@ void Display() {
     drawRock();
 }
 
-void initShader(struct Object &obj, std::string vertexShaderPath, std::string fragShaderPath) { 
+void initShader(struct SceneObject &obj, std::string vertexShaderPath, std::string fragShaderPath) { 
     obj.shaderProgram = LinkProgramViaFile(vertexShaderPath.c_str(), fragShaderPath.c_str());
     if (!obj.shaderProgram)
         printf("can't init shader program\n");
