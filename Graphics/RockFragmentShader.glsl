@@ -51,6 +51,5 @@ void main() {
     for (int i = 0; i < numLights; i++) {
         result += calcPointLight(lights[i]);
     }
-   
     pColor = vec4((result), 1.0);
 }
