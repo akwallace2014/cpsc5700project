@@ -1,11 +1,12 @@
 #include "MovingObject.h"
 
-MovingObject::MovingObject(std::vector<vec2> targetPositions, int startIndex, float movementFactor) {
+MovingObject::MovingObject(std::vector<vec2> targetPositions, std::vector<int> turns, int startIndex, float movementFactor) {
 	if (targetPositions.size() < 2) {
 		printf("\nMovingObject: error, not enough target positions");
 	}
 
 	targets = targetPositions;
+	turningPoints = turns;
 	currentIndex = startIndex;
 	movementRate = movementFactor;
 
@@ -17,12 +18,38 @@ MovingObject::MovingObject(std::vector<vec2> targetPositions, int startIndex, fl
 	}
 
 	updateTarget();
+	
+	// if fairies don't need to rotate on their first path, start out facing the correct direction
+	if (turningPoints.at(currentIndex) == 0) {
+		if (totalDistance.x >= 0.0f) {
+			rotationY = 40.0f;
+		}
+		else {
+			rotationY = -90.0f;
+		}
+	}
+	// if fairies DO need to rotate in their first path, start them facing the opposite direction
+	// so the rotation will set them correctly
+	else {
+		if (totalDistance.x > 0.0f) {
+			rotationY = -90.0f;
+		}
+		else {
+			rotationY = 40.0f;
+		}
+	}
+	 
+	
 }
 
 void MovingObject::adjustMovement() {
 	currentPos += increments;
 	distMoved.x += abs(increments.x);
 	distMoved.y += abs(increments.y);
+	if (turningPoints.at(currentIndex) != 0) {
+		rotationY += rotYIncr;
+	}
+	
 
 	if (abs(distMoved.x) > abs(totalDistance.x)) {
 		incrementIndex();
@@ -64,12 +91,34 @@ void MovingObject::updateTarget() {
 	movingFrom = currentPos;
 	movingTowards = targets.at(targetIndex);
 	totalDistance = movingTowards - currentPos;
-	if (totalDistance.x > 0.0f) {
-		rotationY = 40.0f;
+	
+	// get all fairies moving at the same rate
+	float pathLength = sqrt((totalDistance.x * totalDistance.x) + (totalDistance.y * totalDistance.y));
+	float numCalls = pathLength / movementRate;
+	increments.x = totalDistance.x / numCalls;
+	increments.y = totalDistance.y / numCalls;
+
+	int turningPoint = turningPoints.at(currentIndex);
+	float totalRotationNeeded = 130.0f;
+	if (turningPoint != 0) {
+		rotYIncr = totalRotationNeeded / numCalls;
+		if (turningPoint == -1) {
+			rotYIncr *= -1.0f;
+		}
 	}
-	else {
-		rotationY = -90.0f;
-	}
-	increments = totalDistance * movementRate;
+	
 	distMoved = vec2(0.0);
+}
+
+float MovingObject::getRotationAmount() {
+	const float posTheta = 40.0f;	// amount to rotate around positive y-axis (facing right)
+	const float negTheta = -90.0f;	// amount to rotate around negative y-axis (facing left)
+	float totalRotation = 120.0f;
+	
+	float a = totalDistance.x;
+	float b = totalDistance.y;
+	float c = sqrt((a * a) + (b * b));
+	float result = totalRotation * increments.x;
+	printf("\nMovingObject: i = %d, totalRotation is %f\n", currentIndex, result);
+	return result;
 }

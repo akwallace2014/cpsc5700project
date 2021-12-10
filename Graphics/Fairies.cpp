@@ -34,18 +34,35 @@ struct Object {
 struct Object fairy;
 struct Object rock;
 
-vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
+//vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
+//
+//vector<int> turningPoints = {1, 0, -1, 1, 0, -1, 0 }; 
+
+vector<vec2> targets = { {0.0f, 0.0f},
+    {1.0f, 0.2f},
+    {0.8f, 0.4f},
+    {-0.3f, 0.9f},
+    {-1.0f, -0.6f},
+    {-0.8f, -0.9f},
+    {0.5f, -0.2f},
+    {0.8f, -0.4f},
+    {1.0f, -0.6f},
+    {0.3f, -1.0f},
+    {-0.4f, -0.3f},
+    {-0.3f, -0.1f} };
+
+vector<int> turningPoints = { 0, -1, 0, 0, 1, 0, 0, -1, 0, 0, 1, 0 };
 
 std::vector<MovingObject*> movingFairies;
 vec3 fairyPositions[5];
 
 void initializeFairies() {
-    for (int i = 0; i < NUM_FAIRIES; i++) {
-        MovingObject* fairy = new MovingObject(targets, i);
+    // disperse the fairies' starting locations across the flight path
+    for (int i = 0, j = 0; j < NUM_FAIRIES; ++j, i += 2) {
+        MovingObject* fairy = new MovingObject(targets, turningPoints, i);
         movingFairies.push_back(fairy);
         fairyPositions[i] = fairy->position();
     }
-    printf("\nFairies initialized\n");
 }
 
 void cleanup() {

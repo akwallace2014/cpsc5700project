@@ -8,14 +8,10 @@
 class MovingObject {
 public:
     // Constructor
-	MovingObject(std::vector<vec2> targetPositions, int startIndex = 0, float movementFactor = 0.0015);
+	MovingObject(std::vector<vec2> targetPositions, std::vector<int> turns, int startIndex = 0, float movementFactor = 0.002);
 
     // adjusts the object's location coordinates 
 	void adjustMovement();
-
-    // returns the object's current individual coordinate
-    //float x();
-    //float y();
 
     // returns the object's current coordinates as a vec3
     vec3 position();
@@ -30,14 +26,20 @@ public:
 
 
 private:
-    // degrees to rotate along y-axis
+    // degrees currently rotated along y-axis
     float rotationY;
+
+    // amount to rotate along y-axis with each call to adjustMovement()
+    float rotYIncr;
 
     // factor by which to adjust location coordinates in each call to adjustMovement
     float movementRate;
 
     // coordinates of target positions for the object to move towards
     std::vector<vec2> targets;
+
+    // whether the location in the matching index of targets represents a turning point for the object
+    std::vector<int> turningPoints;
 
     // indices in targets vector
     int currentIndex;
@@ -66,5 +68,9 @@ private:
     void incrementIndex();
 
     void updateTarget();
+
+    // determines how much the object should rotate at each call in order to face the correct direction
+    // by the time it reaches the next target
+    float getRotationAmount();
 };
 #endif // !MOVINGOBJECT_H
