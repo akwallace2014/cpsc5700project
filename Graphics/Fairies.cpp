@@ -33,10 +33,8 @@ struct SceneObject {
 struct SceneObject fairy;
 struct SceneObject rock;
 
-//vector<vec2> targets = { {0.0000f, 0.0000f}, {1.0000f, 1.0000f}, {0.0000f, 1.0000f}, {-1.0000f, -1.0000f}, {1.0000f, 0.0000f}, {0.0000f, -1.0000f}, {-1.0000f, 1.0000f}};
-//
-//vector<int> turningPoints = {1, 0, -1, 1, 0, -1, 0 }; 
-
+// Fairy flight path data
+// Locations on the screen fairies will loop through
 vector<vec2> targets = { {0.0f, 0.0f},
     {1.0f, 0.2f},
     {0.8f, 0.4f},
@@ -50,6 +48,8 @@ vector<vec2> targets = { {0.0f, 0.0f},
     {-0.4f, -0.3f},
     {-0.3f, -0.1f} };
 
+// whether a location in targets represents a path in which a fairy must rotate itself to continue facing forward
+// 0 = no change, -1 = rotate left, 1 = rotate right
 vector<int> turningPoints = { 0, -1, 0, 0, 1, 0, 0, -1, 0, 0, 1, 0 };
 
 std::vector<MovingObject*> movingFairies;
@@ -91,6 +91,7 @@ void loadTexture(struct SceneObject& obj, std::string filePath) {
     obj.textureID = LoadTexture(filePath.c_str(), 0);
 }
 
+// for sending to shaders
 void updateFairyPositions() {
     for (int i = 0; i < NUM_FAIRIES; i++) {
         fairyPositions[i] = movingFairies.at(i)->position();
@@ -169,8 +170,6 @@ void initShader(struct SceneObject &obj, std::string vertexShaderPath, std::stri
     if (!obj.shaderProgram)
         printf("can't init shader program\n");
 }
-
-// application
 
 void Keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS && key == GLFW_KEY_ESCAPE)
