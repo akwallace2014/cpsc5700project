@@ -199,9 +199,9 @@ int main() {
     gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
     printf("GL version: %s\n", glGetString(GL_VERSION));
 
-    loadMesh(fairy, "./Healing_Fairy.obj");
-    loadMesh(rock, "./Rock.obj");
-    loadTexture(rock, "./RockGrey.tga");
+    loadMesh(fairy, "./../resources/Healing_Fairy.obj");
+    loadMesh(rock, "./../resources/Rock.obj");
+    loadTexture(rock, "./../resources/RockGrey.tga");
 
     initShader(fairy, "./FairyVertexShader.glsl", "./LightSourceFragmentShader.glsl");
     initShader(rock, "./RockVertexShader.glsl", "./RockFragmentShader.glsl");
