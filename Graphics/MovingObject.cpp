@@ -1,3 +1,5 @@
+// MovingObject.cpp - Implementation for moving objects around the screen
+// Author: Alisa Wallace
 #include "MovingObject.h"
 
 MovingObject::MovingObject(std::vector<vec2> targetPositions, std::vector<int> turns, int startIndex, float movementFactor) {
@@ -49,7 +51,6 @@ void MovingObject::adjustMovement() {
 	if (turningPoints.at(currentIndex) != 0) {
 		rotationY += rotYIncr;
 	}
-	
 
 	if (abs(distMoved.x) > abs(totalDistance.x)) {
 		incrementIndex();
@@ -98,6 +99,7 @@ void MovingObject::updateTarget() {
 	increments.x = totalDistance.x / numCalls;
 	increments.y = totalDistance.y / numCalls;
 
+	// determine rotation rate so fairy will rotate completely along the path
 	int turningPoint = turningPoints.at(currentIndex);
 	float totalRotationNeeded = 130.0f;
 	if (turningPoint != 0) {
@@ -108,17 +110,4 @@ void MovingObject::updateTarget() {
 	}
 	
 	distMoved = vec2(0.0);
-}
-
-float MovingObject::getRotationAmount() {
-	const float posTheta = 40.0f;	// amount to rotate around positive y-axis (facing right)
-	const float negTheta = -90.0f;	// amount to rotate around negative y-axis (facing left)
-	float totalRotation = 120.0f;
-	
-	float a = totalDistance.x;
-	float b = totalDistance.y;
-	float c = sqrt((a * a) + (b * b));
-	float result = totalRotation * increments.x;
-	printf("\nMovingObject: i = %d, totalRotation is %f\n", currentIndex, result);
-	return result;
 }

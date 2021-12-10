@@ -1,3 +1,4 @@
+// MovingObject.h - Header file for moving objects around the screen
 #ifndef MOVINGOBJECT_H
 #define MOVINGOBJECT_H
 
@@ -7,10 +8,10 @@
 
 class MovingObject {
 public:
-    // Constructor
+    // Constructor - only accommodates movement in x/y planes, z value is fixed
 	MovingObject(std::vector<vec2> targetPositions, std::vector<int> turns, int startIndex = 0, float movementFactor = 0.002);
 
-    // adjusts the object's location coordinates 
+    // adjusts the object's location coordinates & rotation amount
 	void adjustMovement();
 
     // returns the object's current coordinates as a vec3
@@ -43,7 +44,7 @@ private:
 
     // indices in targets vector
     int currentIndex;
-    int targetIndex;
+    int targetIndex; 
 
     // coordinates of origin - will not change until target updated
     // equal to targets[currentIndex]
@@ -68,9 +69,5 @@ private:
     void incrementIndex();
 
     void updateTarget();
-
-    // determines how much the object should rotate at each call in order to face the correct direction
-    // by the time it reaches the next target
-    float getRotationAmount();
 };
 #endif // !MOVINGOBJECT_H
